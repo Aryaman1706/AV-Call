@@ -1,0 +1,29 @@
+{
+  "name": "AV-Call",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aryaman1706/AV-Call.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Aryaman1706/AV-Call/issues"
+  },
+  "homepage": "https://github.com/Aryaman1706/AV-Call#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "peer": "^0.5.3",
+    "socket.io": "^2.3.0",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.0.5"
+  }
+}
