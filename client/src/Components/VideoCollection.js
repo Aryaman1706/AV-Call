@@ -19,7 +19,8 @@ const VideoCollection = () => {
   const roomId = useParams();
 
   const vidRef = useRef(null);
-  const [peerStream, setPeerStream] = useState([]);
+  const idRef = useRef("");
+  const [peerStream, setPeerStream] = useState({});
   const [myStream, setMyStream] = useState(null);
 
   const myPeer = new Peer();
@@ -35,15 +36,29 @@ const VideoCollection = () => {
   const connectToNewUser = (userId, stream) => {
     var call = myPeer.call(userId, stream);
     call.on("stream", (userStream) => {
-      // add only one peer stream
-      setPeerStream((prevArray) => [...prevArray, userStream]);
+      setPeerStream((prevState) => {
+        return {
+          ...prevState,
+          [userId]: userStream,
+        };
+      });
+    });
+    call.on("close", () => {
+      removePeerVideo(userId);
+    });
+  };
+
+  const removePeerVideo = (id) => {
+    console.log("Remove Peer Video");
+    setPeerStream((prevState) => {
+      return _.omit(prevState, [id]);
     });
   };
 
   useEffect(() => {
     // Init peer connection
     myPeer.on("open", (userId) => {
-      console.log(userId);
+      idRef.current = userId;
       // Join room
       socket.emit("let_me_in", roomId, userId);
     });
@@ -63,7 +78,12 @@ const VideoCollection = () => {
           call.answer(mediaStream);
           call.on("stream", (userStream) => {
             // add only one peer stream
-            setPeerStream((prevArray) => [...prevArray, userStream]);
+            setPeerStream((prevState) => {
+              return {
+                ...prevState,
+                [call.peer]: userStream,
+              };
+            });
           });
         });
 
@@ -72,25 +92,25 @@ const VideoCollection = () => {
           // Add user's mediaStream
           connectToNewUser(userId, mediaStream);
         });
-      });
 
-    socket.on("bye_bye", (userId) => {
-      // Remove user's video
-      console.log("Bye Bye User ", userId);
-    });
+        socket.on("bye_bye", (userId) => {
+          // Remove user's video
+          console.log("bye bye ", userId);
+          removePeerVideo(userId);
+        });
+      });
   }, []);
 
   return (
     <Fragment>
       <div className="row" style={{ marginTop: "25px", padding: "15px" }}>
         <VideoItem vidRef={vidRef} muted={true} />
-        {peerStream[0]
-          ? _.uniqBy(peerStream, "id").map((stream) => {
-              return <PeerVideo peerStream={stream} />;
-            })
-          : null}
+        {Object.values(peerStream).map((stream, index) => {
+          return <PeerVideo peerStream={stream} key={index} />;
+        })}
       </div>
-      <Controls myStream={myStream} setMyStream={setMyStream} />
+      {console.log("peer stream ", peerStream)}
+      <Controls myStream={myStream} />
     </Fragment>
   );
 };

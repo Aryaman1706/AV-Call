@@ -12,8 +12,9 @@ io.on("connection", (socket) => {
     console.log("let me in", userId);
     socket.join(roomId);
     socket.to(roomId).broadcast.emit("i_am_here", userId);
-    
+
     socket.on("disconnect", () => {
+      console.log("disconnect");
       socket.to(roomId).broadcast.emit("bye_bye", userId);
     });
   });
