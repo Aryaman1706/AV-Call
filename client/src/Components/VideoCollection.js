@@ -1,48 +1,46 @@
 import React, { Fragment, useEffect, useState, useRef } from "react";
 import { useParams } from "react-router";
 import Peer from "peerjs";
+import _ from "lodash";
 
 import VideoItem from "./VideoItem";
-import Controls from "./Controls";
 
 import io from "socket.io-client";
+import Controls from "./Controls";
 
 let socket;
 
 const VideoCollection = () => {
   const ENDPOINT = "http://localhost:5000/";
+
+  // Init Socket Connection
+  socket = io(ENDPOINT);
+
   const roomId = useParams();
 
   const vidRef = useRef(null);
-  const peerStreamRef = useRef([]);
-  const [peerStream, setPeerStream] = useState(() => {
-    return [];
-  });
+  const [peerStream, setPeerStream] = useState([]);
+  const [myStream, setMyStream] = useState(null);
 
   const myPeer = new Peer();
 
-  const GenerateVideo = ({ peerStream }) => {
+  const PeerVideo = ({ peerStream }) => {
     const ref = useRef(null);
     useEffect(() => {
       ref.current.srcObject = peerStream;
     }, []);
-    return <VideoItem vidRef={ref} />;
+    return <VideoItem vidRef={ref} muted={false} />;
   };
 
   const connectToNewUser = (userId, stream) => {
-    console.log("New User Arrived");
     var call = myPeer.call(userId, stream);
     call.on("stream", (userStream) => {
-      console.log("Connect New User ", userStream);
+      // add only one peer stream
       setPeerStream((prevArray) => [...prevArray, userStream]);
     });
   };
 
   useEffect(() => {
-    console.log("Peer Stream Array ", peerStream);
-    // Init Socket Connection
-    socket = io(ENDPOINT);
-
     // Init peer connection
     myPeer.on("open", (userId) => {
       console.log(userId);
@@ -57,22 +55,21 @@ const VideoCollection = () => {
         audio: true,
       })
       .then((mediaStream) => {
-        console.log("My Video Stream ", mediaStream);
+        setMyStream(mediaStream);
         vidRef.current.srcObject = mediaStream;
 
         // call setup for peer connection
         myPeer.on("call", (call) => {
           call.answer(mediaStream);
           call.on("stream", (userStream) => {
-            console.log("Answer Call ", userStream);
-            setPeerStream((peerStream) => [...peerStream, userStream]);
+            // add only one peer stream
+            setPeerStream((prevArray) => [...prevArray, userStream]);
           });
         });
 
         // Room Joined
         socket.on("i_am_here", (userId) => {
           // Add user's mediaStream
-          console.log("Welcome new user :-", userId);
           connectToNewUser(userId, mediaStream);
         });
       });
@@ -86,14 +83,14 @@ const VideoCollection = () => {
   return (
     <Fragment>
       <div className="row" style={{ marginTop: "25px", padding: "15px" }}>
-        <VideoItem vidRef={vidRef} />
+        <VideoItem vidRef={vidRef} muted={true} />
         {peerStream[0]
-          ? peerStream.map((stream) => {
-              return <GenerateVideo peerStream={stream} />;
+          ? _.uniqBy(peerStream, "id").map((stream) => {
+              return <PeerVideo peerStream={stream} />;
             })
           : null}
       </div>
-      {console.log("Peer Stream Array ", peerStream)}
+      <Controls myStream={myStream} setMyStream={setMyStream} />
     </Fragment>
   );
 };
