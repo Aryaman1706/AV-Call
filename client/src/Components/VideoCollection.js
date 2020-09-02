@@ -11,7 +11,8 @@ import Controls from "./Controls";
 let socket;
 
 const VideoCollection = () => {
-  const ENDPOINT = "http://localhost:5000/";
+  // const ENDPOINT = "http://localhost:5000/";
+  const ENDPOINT = process.env.PORT;
 
   // Init Socket Connection
   socket = io(ENDPOINT);
