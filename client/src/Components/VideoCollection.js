@@ -7,12 +7,13 @@ import VideoItem from "./VideoItem";
 
 import io from "socket.io-client";
 import Controls from "./Controls";
+import { clearConfigCache } from "prettier";
 
 let socket;
 
 const VideoCollection = () => {
   // const ENDPOINT = "http://localhost:5000/";
-  const ENDPOINT = process.env.PORT;
+  const ENDPOINT = "https://av-call.herokuapp.com/";
 
   // Init Socket Connection
   socket = io(ENDPOINT);
@@ -104,6 +105,7 @@ const VideoCollection = () => {
 
   return (
     <Fragment>
+      {console.log(process.env.PORT)}
       <div className="row" style={{ marginTop: "25px", padding: "15px" }}>
         <VideoItem vidRef={vidRef} muted={true} />
         {Object.values(peerStream).map((stream, index) => {
