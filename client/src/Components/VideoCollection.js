@@ -7,7 +7,6 @@ import VideoItem from "./VideoItem";
 
 import io from "socket.io-client";
 import Controls from "./Controls";
-import { clearConfigCache } from "prettier";
 
 let socket;
 
